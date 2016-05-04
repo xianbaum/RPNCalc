@@ -123,6 +123,43 @@ public final class RPNInterpreter {
 	}
 	
 	/**
+	 * Parses a number at the current index, then pushes it if successful.
+	 * Returns the index to jump to by the parser.
+	 * 
+	 * @param expression The entire expression to evaluate
+	 * @param index The current index to evaluate
+	 * @return The index where the number operator ends, or -1 if not a number
+	 */
+	private int parseNumber( char expression[], int index) {
+		
+		if( Character.isDigit( expression[index]) ||
+				expression[index] == '.' ) {
+			
+			String subString = 
+					new String(expression, index, expression.length - index);
+			String result = subString.split("[^\\d.]")[0];
+			
+			//If there are more than one occurance of '.'
+			if (result.length() - result.replace(".", "").length() > 1) {
+				
+				reportError("Error parsing number");
+				return -1;
+			}
+						
+			if( !unaryStack.isEmpty() ) {
+				
+				result = unaryOperation( new BigDecimal( result ) ).toString();
+			}
+			
+			pushExpectedNumber( new BigDecimal( result ));
+			
+			return index + result.length() - 1;
+		}
+		
+		return -1;
+	}
+	
+	/**
 	 * Checks whether the operation is unary or binary. Useful especially for
 	 * the minus sign, which is either used as a subtraction (binary) or 
 	 * negate(unary) sign. Able to stack unary operations (like double negating)
@@ -165,35 +202,6 @@ public final class RPNInterpreter {
 		}
 		
 		unaryStack.removeAllElements();
-		return -1;
-	}
-
-	private int parseNumber( char expression[], int index) {
-				
-		if( Character.isDigit( expression[index]) ||
-				expression[index] == '.' ) {
-			
-			String subString = 
-					new String(expression, index, expression.length - index);
-			String result = subString.split("[^\\d.]")[0];
-			
-			//If there are more than one occurance of '.'
-			if (result.length() - result.replace(".", "").length() > 1) {
-				
-				reportError("Error parsing number");
-				return -1;
-			}
-						
-			if( !unaryStack.isEmpty() ) {
-				
-				result = unaryOperation( new BigDecimal( result ) ).toString();
-			}
-			
-			pushExpectedNumber( new BigDecimal( result ));
-			
-			return index + result.length() - 1;
-		}
-		
 		return -1;
 	}
 	
